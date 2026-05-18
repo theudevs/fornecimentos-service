@@ -1,7 +1,18 @@
 services:
+  fornecimentos-service:
+    build: .
+    container_name: fornecimentos-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5003:5003"
+    networks:
+      - portal-b2b-network
+
   fornecimentos-front:
     build:
-      context: .
+      context: ./front-end
       args:
         VITE_BASE_PATH: ${VITE_BASE_PATH:-/fornecimentos/}
         VITE_FORNECIMENTO_API_URL: ${VITE_FORNECIMENTO_API_URL:-/api/fornecimentos}
@@ -9,6 +20,8 @@ services:
     restart: unless-stopped
     ports:
       - "${FRONTEND_PORT:-8083}:80"
+    depends_on:
+      - fornecimentos-service
     networks:
       - portal-b2b-network
 

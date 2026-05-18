@@ -13,7 +13,7 @@ uvicorn app.main:app --reload
 Abra o Swagger:
 
 ```text
-http://localhost:8000/docs
+http://localhost:5003/docs
 ```
 
 Separe estes IDs no banco:

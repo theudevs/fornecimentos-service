@@ -41,12 +41,16 @@ class EventPublisher:
         if not self._producer:
             return
 
-        self._producer.produce(
-            self.settings.kafka_topic_fornecimentos,
-            key=key,
-            value=json.dumps(event, default=_json_default).encode("utf-8"),
-        )
-        self._producer.flush()
+        try:
+            self._producer.produce(
+                event_type,
+                key=key,
+                value=json.dumps(event, default=_json_default).encode("utf-8"),
+            )
+            self._producer.flush()
+        except Exception:
+            if self.settings.kafka_fail_on_publish_error:
+                raise
 
 
 publisher = EventPublisher()

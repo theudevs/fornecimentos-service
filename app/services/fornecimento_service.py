@@ -186,13 +186,3 @@ def inativar_fornecimento(db: Session, fornecimento_id: uuid.UUID, empresa_id: u
     fornecimento.ativo = False
     fornecimento.ultima_alteracao = datetime.now(timezone.utc)
     db.commit()
-
-    publisher.publish(
-        "fornecimento_inativado",
-        {
-            "idFornecimento": fornecimento.id,
-            "idEmpresaFornecedor": fornecimento.empresa_fornecedor_id,
-            "idProduto": fornecimento.produto_id,
-        },
-        key=str(fornecimento.id),
-    )

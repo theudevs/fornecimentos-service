@@ -15,7 +15,7 @@ Este servico e responsavel por:
 - Atualizar preco, produto, endereco de origem, quantidade e status.
 - Atualizar estoque/quantidade disponivel.
 - Inativar fornecimento por exclusao logica.
-- Publicar eventos Kafka relacionados a fornecimentos.
+- Publicar eventos Kafka previstos para fornecimentos.
 
 Este servico nao e responsavel por:
 
@@ -109,24 +109,32 @@ Copy-Item .env.example .env
 Configure a conexao no `.env`:
 
 ```env
-APP_NAME=fornecimentos-service
+SERVICE_NAME=fornecimentos-service
+PORT=5003
 APP_ENV=local
-DATABASE_URL=postgresql+psycopg2://USUARIO:SENHA@HOST:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:SENHA_AQUI@136.114.235.212:5432/portal_b2b
+DB_SCHEMA=portal_b2b
 KAFKA_ENABLED=false
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-KAFKA_TOPIC_FORNECIMENTOS=portal-b2b.fornecimentos
+KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
+KAFKA_FAIL_ON_PUBLISH_ERROR=false
 ```
 
 Rode a API:
 
 ```powershell
-uvicorn app.main:app --reload
+uvicorn app.main:app --host 0.0.0.0 --port 5003 --reload
 ```
 
 Abra o Swagger:
 
 ```text
-http://localhost:8000/docs
+http://localhost:5003/docs
+```
+
+No ambiente de integracao, o acesso externo oficial sera:
+
+```text
+http://34.8.17.245/api/fornecimentos/health
 ```
 
 ## Health Check
@@ -375,15 +383,13 @@ Quando o ambiente Kafka estiver disponivel:
 
 ```env
 KAFKA_ENABLED=true
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-KAFKA_TOPIC_FORNECIMENTOS=portal-b2b.fornecimentos
+KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 ```
 
 Eventos publicados:
 
 - `fornecimento_criado`
 - `estoque_atualizado`
-- `fornecimento_inativado`
 
 Formato padrao:
 
@@ -398,6 +404,8 @@ Formato padrao:
   "payload": {}
 }
 ```
+
+O nome do topico Kafka publicado e sempre igual ao `eventType`, conforme o padrao oficial da infraestrutura.
 
 ### Evento fornecimento_criado
 
@@ -428,18 +436,6 @@ Payload:
 }
 ```
 
-### Evento fornecimento_inativado
-
-Payload:
-
-```json
-{
-  "idFornecimento": "uuid",
-  "idEmpresaFornecedor": "uuid",
-  "idProduto": "uuid"
-}
-```
-
 ## Testes Manuais
 
 O roteiro de testes de sucesso e erro esta em:
@@ -461,7 +457,7 @@ Ele usa React, Vite, TypeScript, Tailwind, shadcn/ui, axios e react-query, segui
 Para rodar o backend:
 
 ```powershell
-uvicorn app.main:app --reload
+uvicorn app.main:app --host 0.0.0.0 --port 5003 --reload
 ```
 
 Para rodar o frontend:
@@ -475,7 +471,30 @@ npm run dev
 Abra:
 
 ```text
-http://127.0.0.1:8081/fornecimentos/
+http://127.0.0.1:8083/fornecimentos/
 ```
 
 Enquanto a autenticacao real nao estiver pronta, informe manualmente o UUID da empresa fornecedora no campo **Empresa logada**. Esse valor e enviado para a API no header `X-Empresa-Id`.
+
+## Docker
+
+O repositorio esta preparado para deploy na infraestrutura oficial com:
+
+```text
+Dockerfile
+docker-compose.yml
+.env.example
+```
+
+O compose sobe:
+
+- `fornecimentos-service` na porta oficial `5003`.
+- `fornecimentos-front` na porta sugerida `8083`.
+- ambos na rede externa `portal-b2b-network`.
+
+Para executar em ambiente com a rede da infra criada:
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+```

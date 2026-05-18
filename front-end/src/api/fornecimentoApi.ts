@@ -9,7 +9,7 @@ import type {
 
 const baseURL =
   (import.meta.env.VITE_FORNECIMENTO_API_URL as string | undefined)?.trim() ||
-  "/api";
+  "/api/fornecimentos";
 
 export const fornecimentoHttp = axios.create({
   baseURL,

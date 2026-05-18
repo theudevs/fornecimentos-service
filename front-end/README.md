@@ -6,7 +6,7 @@ Enquanto a autenticacao real nao estiver integrada, a tela usa o UUID da empresa
 
 ## Como rodar
 
-Com o backend FastAPI rodando em `http://127.0.0.1:8000`, execute:
+Com o backend FastAPI rodando em `http://127.0.0.1:5003`, execute:
 
 ```powershell
 npm install
@@ -17,8 +17,8 @@ Por padrao, o app usa:
 
 ```text
 VITE_BASE_PATH=/fornecimentos/
-VITE_FORNECIMENTO_API_URL=/api
-VITE_FORNECIMENTO_API_TARGET=http://127.0.0.1:8000
+VITE_FORNECIMENTO_API_URL=/api/fornecimentos
+VITE_FORNECIMENTO_API_TARGET=http://127.0.0.1:5003
 VITE_EMPRESA_ID=
 ```
 

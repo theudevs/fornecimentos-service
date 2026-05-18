@@ -11,7 +11,7 @@ settings = get_settings()
 engine = create_engine(
     settings.database_url,
     pool_pre_ping=True,
-    connect_args={"options": "-csearch_path=portal_b2b,public"},
+    connect_args={"options": f"-csearch_path={settings.db_schema},public"},
 )
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
