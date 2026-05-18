@@ -162,6 +162,8 @@ Resposta esperada:
 ```text
 GET    /health
 GET    /health/db
+GET    /apoio/produtos
+GET    /apoio/empresas/{empresa_id}/enderecos
 POST   /fornecimentos
 GET    /fornecimentos
 GET    /fornecimentos/{fornecimento_id}
@@ -170,6 +172,8 @@ PUT    /fornecimentos/{fornecimento_id}
 PATCH  /fornecimentos/{fornecimento_id}/estoque
 DELETE /fornecimentos/{fornecimento_id}
 ```
+
+Os endpoints `/apoio/*` existem para desenvolvimento e demonstracao do frontend enquanto a integracao com os microsservicos de Produtos e Usuarios/Acesso ainda nao estiver disponivel.
 
 ## Criar Fornecimento
 
@@ -443,3 +447,35 @@ O roteiro de testes de sucesso e erro esta em:
 ```text
 docs/testes-manuais.md
 ```
+
+## Frontend
+
+O frontend React fica em:
+
+```text
+front-end/
+```
+
+Ele usa React, Vite, TypeScript, Tailwind, shadcn/ui, axios e react-query, seguindo o padrao visual do frontend do microsservico de Produtos.
+
+Para rodar o backend:
+
+```powershell
+uvicorn app.main:app --reload
+```
+
+Para rodar o frontend:
+
+```powershell
+cd front-end
+npm install
+npm run dev
+```
+
+Abra:
+
+```text
+http://127.0.0.1:8081/fornecimentos/
+```
+
+Enquanto a autenticacao real nao estiver pronta, informe manualmente o UUID da empresa fornecedora no campo **Empresa logada**. Esse valor e enviado para a API no header `X-Empresa-Id`.

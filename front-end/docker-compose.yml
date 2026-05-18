@@ -1,0 +1,17 @@
+services:
+  fornecimentos-front:
+    build:
+      context: .
+      args:
+        VITE_BASE_PATH: ${VITE_BASE_PATH:-/fornecimentos/}
+        VITE_FORNECIMENTO_API_URL: ${VITE_FORNECIMENTO_API_URL:-/api}
+    container_name: fornecimentos-front
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8081}:80"
+    networks:
+      - portal-b2b-network
+
+networks:
+  portal-b2b-network:
+    external: true

@@ -8,3 +8,6 @@ __pycache__/
 .ruff_cache/
 .coverage
 htmlcov/
+front-end/node_modules/
+front-end/dist/
+front-end/.env

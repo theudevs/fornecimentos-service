@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.apoio import router as apoio_router
 from app.api.fornecimentos import empresa_router, router as fornecimentos_router
 from app.core.config import get_settings
 from app.db.session import check_database
@@ -24,6 +25,7 @@ app.add_middleware(
 
 app.include_router(fornecimentos_router)
 app.include_router(empresa_router)
+app.include_router(apoio_router)
 
 
 @app.get("/health", tags=["Health"])
