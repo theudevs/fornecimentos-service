@@ -12,8 +12,13 @@ class Settings(BaseSettings):
     kafka_enabled: bool = False
     kafka_bootstrap_servers: str = ""
     kafka_fail_on_publish_error: bool = False
+    auth_enabled: bool = False
+    jwt_secret: str = ""
+    jwt_issuer: str = "portal-autenticacao"
+    jwt_audience: str = "portal-b2b"
+    jwt_clock_skew_seconds: int = 60
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     @property
     def app_name(self) -> str:

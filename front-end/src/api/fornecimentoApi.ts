@@ -6,6 +6,7 @@ import type {
   FornecimentoInput,
   ProdutoOpcao,
 } from "@/types/fornecimento";
+import { getAuthToken } from "@/lib/auth";
 
 const baseURL =
   (import.meta.env.VITE_FORNECIMENTO_API_URL as string | undefined)?.trim() ||
@@ -14,6 +15,12 @@ const baseURL =
 export const fornecimentoHttp = axios.create({
   baseURL,
   headers: { "Content-Type": "application/json" },
+});
+
+fornecimentoHttp.interceptors.request.use((config) => {
+  const token = getAuthToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
 });
 
 export function extractApiError(err: unknown, fallback = "Erro inesperado"): string {

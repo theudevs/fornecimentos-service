@@ -36,13 +36,19 @@ O servico de Usuarios/Acesso deve fornecer:
 - Perfil ativo da empresa.
 - Cadastro e manutencao de enderecos.
 
-Enquanto a autenticacao real nao estiver integrada, os endpoints de escrita usam o header:
+O servico ja aceita o JWT emitido pelo `usuarios-service` nos endpoints de escrita:
+
+```text
+Authorization: Bearer TOKEN_JWT
+```
+
+O backend valida o token, extrai a claim `empresa_id` e usa essa empresa como fornecedora do cadastro.
+
+Para desenvolvimento local, quando `AUTH_ENABLED=false`, os endpoints de escrita tambem aceitam o header:
 
 ```text
 X-Empresa-Id: UUID_DA_EMPRESA
 ```
-
-Futuramente, esse valor deve vir do JWT ou mecanismo oficial de autenticacao.
 
 ### Produtos
 
@@ -114,9 +120,21 @@ PORT=5003
 APP_ENV=local
 DATABASE_URL=postgresql://svc_portal_b2b:SENHA_AQUI@136.114.235.212:5432/portal_b2b
 DB_SCHEMA=portal_b2b
-KAFKA_ENABLED=false
+KAFKA_ENABLED=true
 KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 KAFKA_FAIL_ON_PUBLISH_ERROR=false
+AUTH_ENABLED=true
+JWT_SECRET=SUBSTITUIR_PELA_CHAVE_COMPARTILHADA
+JWT_ISSUER=portal-autenticacao
+JWT_AUDIENCE=portal-b2b
+JWT_CLOCK_SKEW_SECONDS=60
+```
+
+Para desenvolvimento local sem Kafka/JWT, voce pode trocar temporariamente:
+
+```env
+KAFKA_ENABLED=false
+AUTH_ENABLED=false
 ```
 
 Rode a API:
@@ -190,8 +208,10 @@ Os endpoints `/apoio/*` existem para desenvolvimento e demonstracao do frontend 
 Header:
 
 ```text
-X-Empresa-Id: UUID_DA_EMPRESA_FORNECEDORA
+Authorization: Bearer TOKEN_JWT
 ```
+
+Para teste local com `AUTH_ENABLED=false`, voce tambem pode usar `X-Empresa-Id: UUID_DA_EMPRESA_FORNECEDORA`.
 
 Body:
 
@@ -270,8 +290,10 @@ Retorna os fornecimentos cadastrados para uma empresa.
 Header:
 
 ```text
-X-Empresa-Id: UUID_DA_EMPRESA_FORNECEDORA
+Authorization: Bearer TOKEN_JWT
 ```
+
+Para teste local com `AUTH_ENABLED=false`, voce tambem pode usar `X-Empresa-Id: UUID_DA_EMPRESA_FORNECEDORA`.
 
 Body exemplo:
 
@@ -289,8 +311,10 @@ Body exemplo:
 Header:
 
 ```text
-X-Empresa-Id: UUID_DA_EMPRESA_FORNECEDORA
+Authorization: Bearer TOKEN_JWT
 ```
+
+Para teste local com `AUTH_ENABLED=false`, voce tambem pode usar `X-Empresa-Id: UUID_DA_EMPRESA_FORNECEDORA`.
 
 Body:
 
@@ -307,8 +331,10 @@ Body:
 Header:
 
 ```text
-X-Empresa-Id: UUID_DA_EMPRESA_FORNECEDORA
+Authorization: Bearer TOKEN_JWT
 ```
+
+Para teste local com `AUTH_ENABLED=false`, voce tambem pode usar `X-Empresa-Id: UUID_DA_EMPRESA_FORNECEDORA`.
 
 Resposta esperada:
 
@@ -474,7 +500,7 @@ Abra:
 http://127.0.0.1:8083/fornecimentos/
 ```
 
-Enquanto a autenticacao real nao estiver pronta, informe manualmente o UUID da empresa fornecedora no campo **Empresa logada**. Esse valor e enviado para a API no header `X-Empresa-Id`.
+Quando o usuario vier do portal autenticado, o frontend le o token em `sessionStorage.portal_b2b_jwt` e envia `Authorization: Bearer <JWT>`. Tambem le a empresa em `sessionStorage.portal_b2b_session`.
 
 ## Docker
 
@@ -498,3 +524,11 @@ Para executar em ambiente com a rede da infra criada:
 cp .env.example .env
 docker compose up -d --build
 ```
+
+Se o Docker local precisar acessar um PostgreSQL instalado no Windows, use `host.docker.internal` no `.env`:
+
+```env
+DATABASE_URL=postgresql://USUARIO_LOCAL:SENHA_LOCAL@host.docker.internal:5432/portal_b2b
+```
+
+Quando a infra subir o servico, o `.env` deve apontar para o Cloud SQL oficial, nao para `localhost`.

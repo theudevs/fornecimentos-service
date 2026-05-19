@@ -41,6 +41,12 @@ DB_SCHEMA=portal_b2b
 KAFKA_ENABLED=true
 KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 KAFKA_FAIL_ON_PUBLISH_ERROR=false
+
+AUTH_ENABLED=true
+JWT_SECRET=CONFIGURAR_FORA_DO_GIT
+JWT_ISSUER=portal-autenticacao
+JWT_AUDIENCE=portal-b2b
+JWT_CLOCK_SKEW_SECONDS=60
 ```
 
 Nao versionar `.env` real.
@@ -77,17 +83,20 @@ Esses endpoints sao auxiliares. No desenho final, os dados devem vir dos servico
 
 ## Autenticacao
 
-Estado atual:
+Estado implementado:
 
-- Frontend informa temporariamente o UUID da empresa no campo `Empresa logada`.
-- Backend recebe esse valor pelo header `X-Empresa-Id`.
-
-Estado esperado apos integracao com Usuarios/Acesso:
-
-- Frontend envia `Authorization: Bearer <JWT>`.
+- Frontend envia `Authorization: Bearer <JWT>` quando encontra `sessionStorage.portal_b2b_jwt`.
+- Frontend preenche a empresa logada a partir de `sessionStorage.portal_b2b_session`.
 - Backend valida o JWT emitido pelo `usuarios-service`.
 - Backend extrai a empresa pela claim `empresa_id`.
-- Backend verifica perfil `FORNECEDOR` pela claim `role` ou pelo banco.
+- Backend aceita tokens com `role` ausente ou contendo `FORNECEDOR`; se vierem roles e `FORNECEDOR` nao existir, retorna `403`.
+- Backend ainda confirma no banco se a empresa existe, esta ativa e possui perfil `FORNECEDOR`.
+
+Modo local:
+
+- Com `AUTH_ENABLED=false`, o backend aceita o header `X-Empresa-Id` para testes no Swagger e no frontend local.
+- Com `AUTH_ENABLED=true`, `Authorization: Bearer <JWT>` e obrigatorio.
+- A interface React nao exibe campo manual de empresa; ela usa a sessao/JWT do portal.
 
 Claims esperadas do JWT:
 

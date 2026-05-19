@@ -1,6 +1,6 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, Boxes, Eye, PackagePlus, Pencil, Power, PowerOff, RefreshCcw, Save, SlidersHorizontal } from "lucide-react";
+import { AlertCircle, Boxes, Eye, PackagePlus, Pencil, Power, PowerOff, RefreshCcw, Save, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { apoioApi, extractApiError, fornecimentosApi } from "@/api/fornecimentoApi";
@@ -16,9 +16,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getEmpresaIdFromSession, hasAuthToken } from "@/lib/auth";
 import type { Fornecimento, FornecimentoInput } from "@/types/fornecimento";
 
-const initialEmpresaId = (import.meta.env.VITE_EMPRESA_ID as string | undefined)?.trim() || "";
+const initialEmpresaId = getEmpresaIdFromSession();
 
 const emptyForm: FornecimentoInput = {
   produto_id: "",
@@ -53,11 +54,12 @@ function getEnderecoLabel(item: Fornecimento) {
 
 export default function FornecimentosPage() {
   const queryClient = useQueryClient();
-  const [empresaId, setEmpresaId] = useState(initialEmpresaId);
+  const empresaId = initialEmpresaId;
   const [apenasAtivos, setApenasAtivos] = useState(true);
   const [form, setForm] = useState<FornecimentoInput>(emptyForm);
   const [editing, setEditing] = useState<Fornecimento | null>(null);
   const [viewing, setViewing] = useState<Fornecimento | null>(null);
+  const tokenAvailable = hasAuthToken();
 
   const produtosQuery = useQuery({
     queryKey: ["apoio", "produtos"],
@@ -159,19 +161,20 @@ export default function FornecimentosPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <SlidersHorizontal className="h-4 w-4" />
+                  <ShieldCheck className="h-4 w-4" />
                   Sessao atual
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="empresa-id">Empresa logada</Label>
-                  <Input
-                    id="empresa-id"
-                    value={empresaId}
-                    onChange={(event) => setEmpresaId(event.target.value.trim())}
-                    placeholder="UUID da empresa fornecedora"
-                  />
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant={hasEmpresa ? "default" : "secondary"} className="w-fit">
+                    {hasEmpresa ? "Empresa autenticada" : "Sessao nao identificada"}
+                  </Badge>
+                  {tokenAvailable && (
+                    <Badge variant="outline" className="w-fit">
+                      JWT detectado
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex items-center justify-between rounded-md border px-3 py-2">
                   <Label htmlFor="apenas-ativos" className="text-sm font-medium">
@@ -218,7 +221,7 @@ export default function FornecimentosPage() {
                       onValueChange={(value) => setForm((prev) => ({ ...prev, endereco_origem_id: value }))}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder={hasEmpresa ? "Selecione um endereco" : "Informe a empresa"} />
+                        <SelectValue placeholder={hasEmpresa ? "Selecione um endereco" : "Sessao obrigatoria"} />
                       </SelectTrigger>
                       <SelectContent>
                         {(enderecosQuery.data ?? []).map((endereco) => (
@@ -275,9 +278,9 @@ export default function FornecimentosPage() {
             {!hasEmpresa && (
               <Alert>
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Informe a empresa logada</AlertTitle>
+                <AlertTitle>Sessao nao identificada</AlertTitle>
                 <AlertDescription>
-                  Enquanto a autenticacao real nao estiver pronta, use o UUID da empresa fornecedora no campo de sessao.
+                  Acesse pelo portal autenticado para carregar a empresa fornecedora da sessao.
                 </AlertDescription>
               </Alert>
             )}

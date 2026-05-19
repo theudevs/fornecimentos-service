@@ -1,9 +1,9 @@
 import uuid
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, Query, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
+from app.core.auth import AuthContext, get_auth_context
 from app.db.session import get_db
 from app.schemas.fornecimento import (
     EstoqueUpdate,
@@ -23,22 +23,14 @@ from app.services.fornecimento_service import (
 router = APIRouter(prefix="/fornecimentos", tags=["Fornecimentos"])
 empresa_router = APIRouter(prefix="/empresas", tags=["Fornecimentos"])
 
-EmpresaHeader = Annotated[
-    uuid.UUID,
-    Header(
-        alias="X-Empresa-Id",
-        description="ID da empresa autenticada. Futuramente pode vir do JWT do servico de usuarios.",
-    ),
-]
-
 
 @router.post("", response_model=FornecimentoResponse, status_code=status.HTTP_201_CREATED)
 def post_fornecimento(
     dados: FornecimentoCreate,
-    empresa_id: EmpresaHeader,
+    auth: AuthContext = Depends(get_auth_context),
     db: Session = Depends(get_db),
 ) -> FornecimentoResponse:
-    return criar_fornecimento(db, empresa_id, dados)
+    return criar_fornecimento(db, auth.empresa_id, dados)
 
 
 @router.get("", response_model=list[FornecimentoResponse])
@@ -76,27 +68,27 @@ def get_fornecimentos_por_empresa(
 def put_fornecimento(
     fornecimento_id: uuid.UUID,
     dados: FornecimentoUpdate,
-    empresa_id: EmpresaHeader,
+    auth: AuthContext = Depends(get_auth_context),
     db: Session = Depends(get_db),
 ) -> FornecimentoResponse:
-    return atualizar_fornecimento(db, fornecimento_id, empresa_id, dados)
+    return atualizar_fornecimento(db, fornecimento_id, auth.empresa_id, dados)
 
 
 @router.patch("/{fornecimento_id}/estoque", response_model=FornecimentoResponse)
 def patch_estoque(
     fornecimento_id: uuid.UUID,
     dados: EstoqueUpdate,
-    empresa_id: EmpresaHeader,
+    auth: AuthContext = Depends(get_auth_context),
     db: Session = Depends(get_db),
 ) -> FornecimentoResponse:
-    return atualizar_estoque(db, fornecimento_id, empresa_id, dados.quantidade_disponivel)
+    return atualizar_estoque(db, fornecimento_id, auth.empresa_id, dados.quantidade_disponivel)
 
 
 @router.delete("/{fornecimento_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_fornecimento(
     fornecimento_id: uuid.UUID,
-    empresa_id: EmpresaHeader,
+    auth: AuthContext = Depends(get_auth_context),
     db: Session = Depends(get_db),
 ) -> Response:
-    inativar_fornecimento(db, fornecimento_id, empresa_id)
+    inativar_fornecimento(db, fornecimento_id, auth.empresa_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
